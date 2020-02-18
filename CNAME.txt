@@ -1,1 +1,1 @@
-www.rule.monster
+rule.monster
