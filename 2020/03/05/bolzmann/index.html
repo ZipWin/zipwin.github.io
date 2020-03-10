@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Gemini","version":"7.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="正则系综的系统，能量的概率分布满足玻尔兹曼分布  P(E)&#x3D;\frac{1}{Z}\exp\left(-\frac{E}{k_BT}\right)计算机模拟可以看到正则系综建立玻尔兹曼分布的过程. 假设现在来做这样一个实验：有大量可区分的粒子，一开始每个粒子都有 $1$ 份能量，之后随机拿掉某个粒子的 $1$ 份能量，将这份能量随机放到另一个粒子上，反复重复这样的过程。计算机模拟发现，重复足够多">
+<meta property="og:type" content="article">
+<meta property="og:title" content="玻尔兹曼分布的计算机模拟">
+<meta property="og:url" content="http://yoursite.com/2020/03/05/bolzmann/index.html">
+<meta property="og:site_name" content="鲸落">
+<meta property="og:description" content="正则系综的系统，能量的概率分布满足玻尔兹曼分布  P(E)&#x3D;\frac{1}{Z}\exp\left(-\frac{E}{k_BT}\right)计算机模拟可以看到正则系综建立玻尔兹曼分布的过程. 假设现在来做这样一个实验：有大量可区分的粒子，一开始每个粒子都有 $1$ 份能量，之后随机拿掉某个粒子的 $1$ 份能量，将这份能量随机放到另一个粒子上，反复重复这样的过程。计算机模拟发现，重复足够多">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2020/03/05/bolzmann/distribution_R.gif">
+<meta property="og:image" content="http://yoursite.com/2020/03/05/bolzmann/map_R.gif">
+<meta property="og:image" content="http://yoursite.com/2020/03/05/bolzmann/distribution_LP.gif">
+<meta property="og:image" content="http://yoursite.com/2020/03/05/bolzmann/map_LP.gif">
+<meta property="og:image" content="http://yoursite.com/2020/03/05/bolzmann/distribution_LB.gif">
+<meta property="og:image" content="http://yoursite.com/2020/03/05/bolzmann/map_LB.gif">
+<meta property="article:published_time" content="2020-03-05T09:10:52.000Z">
+<meta property="article:modified_time" content="2020-03-10T10:16:55.092Z">
+<meta property="article:author" content="神成樹理">
+<meta property="article:tag" content="学习">
+<meta property="article:tag" content="研究">
+<meta property="article:tag" content="玻尔兹曼分布">
+<meta property="article:tag" content="Fortran">
+<meta property="article:tag" content="计算机模拟">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/03/05/bolzmann/distribution_R.gif">
+
+<link rel="canonical" href="http://yoursite.com/2020/03/05/bolzmann/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>玻尔兹曼分布的计算机模拟 | 鲸落</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"] > svg a {
+  fill: blue;
+  stroke: blue;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container {
+  overflow: auto hidden;
+}
+
+mjx-container + br {
+  display: none;
+}
+</style></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">鲸落</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">灵魂的栖息之处</p>
+  </div>
+
+  <div class="site-nav-right"></div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/05/bolzmann/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="神成樹理">
+      <meta itemprop="description" content="自由 克制 探索 释放">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="鲸落">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          玻尔兹曼分布的计算机模拟
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-05 17:10:52" itemprop="dateCreated datePublished" datetime="2020-03-05T17:10:52+08:00">2020-03-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-03-10 18:16:55" itemprop="dateModified" datetime="2020-03-10T18:16:55+08:00">2020-03-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BB%9F%E8%AE%A1%E5%8A%9B%E5%AD%A6/" itemprop="url" rel="index">
+                    <span itemprop="name">统计力学</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p> 正则系综的系统，能量的概率分布满足玻尔兹曼分布</p>
+<script type="math/tex; mode=display">
+P(E)=\frac{1}{Z}\exp\left(-\frac{E}{k_BT}\right)</script><p>计算机模拟可以看到正则系综建立玻尔兹曼分布的过程. 假设现在来做这样一个实验：有大量可区分的粒子，一开始每个粒子都有 $1$ 份能量，之后随机拿掉某个粒子的 $1$ 份能量，将这份能量随机放到另一个粒子上，反复重复这样的过程。计算机模拟发现，重复足够多次后，可以发现，具有一定能量的粒子总数关于能量的分布是服从玻尔兹曼分布的.</p>
+<a id="more"></a>
+<h1 id="模拟一：无空间结构的粒子体系"><a href="#模拟一：无空间结构的粒子体系" class="headerlink" title="模拟一：无空间结构的粒子体系"></a>模拟一：无空间结构的粒子体系</h1><h2 id="Problem-Setup"><a href="#Problem-Setup" class="headerlink" title="Problem Setup"></a>Problem Setup</h2><ol>
+<li>把 $N^2$ 个粒子摆成 $N\times N$ 的矩阵</li>
+<li>每个粒子初始带有 $1$ 份能量</li>
+<li>不断重复<ol>
+<li>随机选取一个能量不为零粒子，称为给与者</li>
+<li>随机选取一个给予者之外粒子，称为接收者</li>
+<li>给与者能量数减 $1$</li>
+<li>接收者能量数加 $1$</li>
+</ol>
+</li>
+<li>统计能量数为 $E$ 的粒子个数 $N$</li>
+<li>验证 $N$ 关于 $E$ 的分布是否符合玻尔兹曼分布</li>
+</ol>
+<p>这个 Setup 中，给予者和接收者是随机选取的两个不同粒子，虽然这 $N^2$ 个粒子被排成了 $N\times N$ 的矩阵，但是这个结构并没有在操作过程中体现，因此把这个模拟叫做无空间结构体系的模拟. 实际上，改变粒子的排列并不会影响结果，这里排成矩阵是为了方便拓展到有空间结构的模拟（下面会看到，也就是只允许能量在相邻的粒子间转移）.</p>
+<h2 id="Result"><a href="#Result" class="headerlink" title="Result"></a>Result</h2><p><img src="/2020/03/05/bolzmann/distribution_R.gif" alt="distribution_R"></p>
+<p><img src="/2020/03/05/bolzmann/map_R.gif" alt="map_R"></p>
+<h1 id="模拟二：有空间结构的粒子体系（无界空间）"><a href="#模拟二：有空间结构的粒子体系（无界空间）" class="headerlink" title="模拟二：有空间结构的粒子体系（无界空间）"></a>模拟二：有空间结构的粒子体系（无界空间）</h1><h2 id="Problem-Setup-1"><a href="#Problem-Setup-1" class="headerlink" title="Problem Setup"></a>Problem Setup</h2><ol>
+<li>把 $N^2$ 个粒子摆成 $N\times N$ 的矩阵</li>
+<li>每个粒子初始带有 $1$ 份能量</li>
+<li>不断重复<ol>
+<li>随机选取一个能量不为零粒子，称为给与者</li>
+<li>随机选取一个与给予者相邻的粒子（有8个）（越过边界也认为是相邻的），称为接收者</li>
+<li>给与者能量数减 $1$</li>
+<li>接收者能量数加 $1$</li>
+</ol>
+</li>
+<li>统计能量数为 $E$ 的粒子个数 $N$</li>
+<li>验证 $N$ 关于 $E$ 的分布是否符合玻尔兹曼分布</li>
+</ol>
+<p>与模拟一不同的是，这里只允许粒子与它周围的粒子交换能量，并在四个边界上添加了周期性边界条件.</p>
+<h2 id="Result-1"><a href="#Result-1" class="headerlink" title="Result"></a>Result</h2><p><img src="/2020/03/05/bolzmann/distribution_LP.gif" alt="distribution_LP"></p>
+<p><img src="/2020/03/05/bolzmann/map_LP.gif" alt="map_LP"></p>
+<h1 id="模拟三：有空间结构的粒子体系（有界空间）"><a href="#模拟三：有空间结构的粒子体系（有界空间）" class="headerlink" title="模拟三：有空间结构的粒子体系（有界空间）"></a>模拟三：有空间结构的粒子体系（有界空间）</h1><h2 id="Problem-Setup-2"><a href="#Problem-Setup-2" class="headerlink" title="Problem Setup"></a>Problem Setup</h2><ol>
+<li>把 $N^2$ 个粒子摆成 $N\times N$ 的矩阵</li>
+<li>每个粒子初始带有 $1$ 份能量</li>
+<li>不断重复<ol>
+<li>随机选取一个能量不为零粒子，称为给与者</li>
+<li>随机选取一个与给予者相邻的粒子（除边界的粒子外有8个）（不能越过边界），称为接收者</li>
+<li>给与者能量数减 $1$</li>
+<li>接收者能量数加 $1$</li>
+</ol>
+</li>
+<li>统计能量数为 $E$ 的粒子个数 $N$</li>
+<li>验证 $N$ 关于 $E$ 的分布是否符合玻尔兹曼分布</li>
+</ol>
+<p>与模拟二一样只允许周围的粒子交换能量，只是这里边界是封闭的，粒子不能跨过边界交换能量.</p>
+<h2 id="Result-2"><a href="#Result-2" class="headerlink" title="Result"></a>Result</h2><p><img src="/2020/03/05/bolzmann/distribution_LB.gif" alt="distribution_LB"></p>
+<p><img src="/2020/03/05/bolzmann/map_LB.gif" alt="map_LB"></p>
+<h1 id="分析以及数学证明"><a href="#分析以及数学证明" class="headerlink" title="分析以及数学证明"></a>分析以及数学证明</h1><p>上面的模拟说明，无论粒子是随机地交换能量，还是局域地交换能量，只要时间够长（迭代次数足够多），粒子数随能量的分布就会趋于指数形式的分布，也就是玻尔兹曼分布. 下面会证明，这个分布是</p>
+<script type="math/tex; mode=display">
+N(n)=\left(\frac{1}{2}\right)^{n+1}</script><p>我们就一个比较一般的情况给出证明的大致过程：粒子的总量是 $N$ ，能量的总量是 $Q$.  这样，上面模拟的过程等价于将 $Q$ 份能量分给 $N$ 个粒子（如果是局域交换能量，这个等价不这么明显）. 由于粒子可以有能量也可以没有能量，这样的排列组合问题不便于直接计算. 可以额外增加 $N$ 份能量，这样问题就等价为了每个粒子至少有一份能量的情形，这样，粒子具有 $n$ 份能量（去掉了额外加的那 $1$ 份能量）的概率为</p>
+<script type="math/tex; mode=display">
+P(n)=\frac{C_{Q+N-n-2}^{N-1}}{C_{Q+N-1}^{N}}</script><p>假设 $Q,N\gg1$，对上式取对数，并用 Stirling 近似，再展开到 $n$ 的一阶，可以证明</p>
+<script type="math/tex; mode=display">
+P(n)=\left(\frac{Q}{Q+N}\right)^{n+1}</script><p>换成粒子数的分布就是</p>
+<script type="math/tex; mode=display">
+N(n)=N\left(\frac{Q}{Q+N}\right)^{n+1}</script><p>可见，当 $Q=N$ 时回到模拟的结果.</p>
+<h1 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h1><figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">program</span></span> main </span><br><span class="line">    <span class="keyword">implicit</span> <span class="keyword">none</span></span><br><span class="line">    <span class="keyword">call</span> randomly_exchange()</span><br><span class="line">    <span class="comment">! call locally_exchange()</span></span><br><span class="line"><span class="keyword">end</span> <span class="function"><span class="keyword">program</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">subroutine</span></span> locally_exchange</span><br><span class="line">    <span class="keyword">implicit</span> <span class="keyword">none</span></span><br><span class="line">    <span class="keyword">integer</span>, <span class="keyword">parameter</span> :: N = <span class="number">256</span>, M = <span class="number">256</span></span><br><span class="line">    <span class="keyword">integer</span>, <span class="keyword">dimension</span>(N, M) :: map</span><br><span class="line">    <span class="keyword">integer</span>, <span class="keyword">dimension</span>(N*M) :: distribution(<span class="number">0</span>:N*M-<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">integer</span> :: i, j, k, g_n, g_m, r_n, r_m, idx, dn, dm</span><br><span class="line">    <span class="keyword">character</span>*<span class="number">10</span> :: id</span><br><span class="line"></span><br><span class="line">    map = <span class="number">1</span></span><br><span class="line">    distribution = <span class="number">0</span></span><br><span class="line">    distribution(<span class="number">1</span>) = N*M</span><br><span class="line">    idx = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span> i = <span class="number">1</span>, <span class="number">500000</span></span><br><span class="line">        <span class="keyword">do</span> <span class="keyword">while</span> (.true.)</span><br><span class="line">            <span class="keyword">call</span> randint(g_n, <span class="number">1</span>, N)</span><br><span class="line">            <span class="keyword">call</span> randint(g_m, <span class="number">1</span>, M)</span><br><span class="line">            <span class="keyword">call</span> randint(dn, -<span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">            <span class="keyword">call</span> randint(dm, -<span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">            r_n = g_n + dn</span><br><span class="line">            r_m = g_m + dm</span><br><span class="line">            <span class="comment">! call boundary(r_n, N)</span></span><br><span class="line">            <span class="comment">! call boundary(r_m, M)</span></span><br><span class="line">            <span class="keyword">if</span> (map(g_n, g_m) &gt; <span class="number">0</span>) <span class="keyword">then</span></span><br><span class="line">                <span class="keyword">if</span> (g_n .ne. r_n .or. g_m .ne. r_m) <span class="keyword">then</span></span><br><span class="line">                    <span class="keyword">if</span> (r_n &gt;= <span class="number">1</span> .and. r_n &lt;= N .and. r_m &gt;= <span class="number">1</span> .and. r_m &lt;= M) <span class="keyword">then</span></span><br><span class="line">                        <span class="keyword">exit</span></span><br><span class="line">                    <span class="keyword">end</span> <span class="keyword">if</span></span><br><span class="line">                <span class="keyword">end</span> <span class="keyword">if</span></span><br><span class="line">            <span class="keyword">end</span> <span class="keyword">if</span></span><br><span class="line">        <span class="keyword">end</span> <span class="keyword">do</span></span><br><span class="line">        distribution(map(g_n, g_m)) = distribution(map(g_n, g_m)) - <span class="number">1</span></span><br><span class="line">        distribution(map(r_n, r_m)) = distribution(map(r_n, r_m)) - <span class="number">1</span></span><br><span class="line">        map(g_n, g_m) = map(g_n, g_m) - <span class="number">1</span></span><br><span class="line">        map(r_n, r_m) = map(r_n, r_m) + <span class="number">1</span></span><br><span class="line">        distribution(map(g_n, g_m)) = distribution(map(g_n, g_m)) + <span class="number">1</span></span><br><span class="line">        distribution(map(r_n, r_m)) = distribution(map(r_n, r_m)) + <span class="number">1</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">mod</span>(i, <span class="number">1000</span>) == <span class="number">0</span>) <span class="keyword">then</span></span><br><span class="line">            <span class="built_in">print</span> <span class="string">"(i10)"</span>, i</span><br><span class="line">            <span class="built_in">write</span> (id, <span class="string">"(i10)"</span>) idx</span><br><span class="line">            id = <span class="built_in">adjustl</span>(id)</span><br><span class="line">            open(<span class="keyword">file</span>=<span class="string">'./data/maps/map_'</span>//<span class="built_in">trim</span>(id)//<span class="string">'.dat'</span>, <span class="keyword">unit</span>=<span class="number">10</span>)</span><br><span class="line">            open(<span class="keyword">file</span>=<span class="string">'./data/distributions/distribution_'</span>//<span class="built_in">trim</span>(id)//<span class="string">'.dat'</span>, <span class="keyword">unit</span>=<span class="number">11</span>)</span><br><span class="line">            <span class="keyword">do</span> k = <span class="number">1</span>, <span class="number">256</span></span><br><span class="line">                <span class="keyword">do</span> j = <span class="number">1</span>, <span class="number">256</span></span><br><span class="line">                    <span class="built_in">write</span> (<span class="number">10</span>, <span class="string">"(3i10)"</span>) k, j, map(k, j)</span><br><span class="line">                <span class="keyword">end</span> <span class="keyword">do</span></span><br><span class="line">            <span class="keyword">end</span> <span class="keyword">do</span></span><br><span class="line">            <span class="keyword">do</span> k = <span class="number">0</span>, <span class="number">255</span></span><br><span class="line">                <span class="built_in">write</span> (<span class="number">11</span>, <span class="string">"(3i10)"</span>) k, distribution(k)</span><br><span class="line">            <span class="keyword">end</span> <span class="keyword">do</span></span><br><span class="line">            close(<span class="number">10</span>)</span><br><span class="line">            close(<span class="number">11</span>)</span><br><span class="line">            idx = idx + <span class="number">1</span></span><br><span class="line">        <span class="keyword">end</span> <span class="keyword">if</span></span><br><span class="line">    <span class="keyword">end</span> <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">contains</span></span><br><span class="line">    <span class="function"><span class="keyword">subroutine</span></span> boundary(num, <span class="built_in">max</span>)</span><br><span class="line">        <span class="keyword">implicit</span> <span class="keyword">none</span></span><br><span class="line">        <span class="keyword">integer</span> :: num</span><br><span class="line">        <span class="keyword">integer</span>, <span class="keyword">intent</span>(<span class="keyword">in</span>) :: <span class="built_in">max</span></span><br><span class="line">        <span class="keyword">if</span> (num &gt; <span class="number">0</span>) <span class="keyword">then</span> </span><br><span class="line">            num = <span class="built_in">mod</span>(num-<span class="number">1</span>, <span class="built_in">max</span>)+<span class="number">1</span></span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            num = <span class="built_in">max</span>-<span class="built_in">mod</span>(<span class="number">1</span>-num, <span class="built_in">max</span>)+<span class="number">1</span></span><br><span class="line">        <span class="keyword">end</span> <span class="keyword">if</span></span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span> <span class="function"><span class="keyword">subroutine</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span> <span class="function"><span class="keyword">subroutine</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">subroutine</span></span> randomly_exchange</span><br><span class="line">    <span class="keyword">implicit</span> <span class="keyword">none</span></span><br><span class="line">    <span class="keyword">integer</span>, <span class="keyword">parameter</span> :: N = <span class="number">256</span>, M = <span class="number">256</span></span><br><span class="line">    <span class="keyword">integer</span>, <span class="keyword">dimension</span>(N, M) :: map</span><br><span class="line">    <span class="keyword">integer</span>, <span class="keyword">dimension</span>(N*M) :: distribution(<span class="number">0</span>:N*M-<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">integer</span> :: i, j, k, g_n, g_m, r_n, r_m, idx</span><br><span class="line">    <span class="keyword">character</span>*<span class="number">10</span> :: id</span><br><span class="line"></span><br><span class="line">    map = <span class="number">1</span></span><br><span class="line">    distribution = <span class="number">0</span></span><br><span class="line">    distribution(<span class="number">1</span>) = N*M</span><br><span class="line">    idx = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span> i = <span class="number">1</span>, <span class="number">500000</span></span><br><span class="line">        <span class="keyword">do</span> <span class="keyword">while</span> (.true.)</span><br><span class="line">            <span class="keyword">call</span> randint(g_n, <span class="number">1</span>, N)</span><br><span class="line">            <span class="keyword">call</span> randint(g_m, <span class="number">1</span>, M)</span><br><span class="line">            <span class="keyword">call</span> randint(r_n, <span class="number">1</span>, N)</span><br><span class="line">            <span class="keyword">call</span> randint(r_m, <span class="number">1</span>, M)</span><br><span class="line">            <span class="keyword">if</span> (map(g_n, g_m) &gt; <span class="number">0</span>) <span class="keyword">then</span></span><br><span class="line">                <span class="keyword">if</span> (g_n .ne. r_n .or. g_m .ne. r_m) <span class="keyword">then</span></span><br><span class="line">                    <span class="keyword">exit</span></span><br><span class="line">                <span class="keyword">end</span> <span class="keyword">if</span></span><br><span class="line">            <span class="keyword">end</span> <span class="keyword">if</span></span><br><span class="line">        <span class="keyword">end</span> <span class="keyword">do</span></span><br><span class="line">        distribution(map(g_n, g_m)) = distribution(map(g_n, g_m)) - <span class="number">1</span></span><br><span class="line">        distribution(map(r_n, r_m)) = distribution(map(r_n, r_m)) - <span class="number">1</span></span><br><span class="line">        map(g_n, g_m) = map(g_n, g_m) - <span class="number">1</span></span><br><span class="line">        map(r_n, r_m) = map(r_n, r_m) + <span class="number">1</span></span><br><span class="line">        distribution(map(g_n, g_m)) = distribution(map(g_n, g_m)) + <span class="number">1</span></span><br><span class="line">        distribution(map(r_n, r_m)) = distribution(map(r_n, r_m)) + <span class="number">1</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">mod</span>(i, <span class="number">1000</span>) == <span class="number">0</span>) <span class="keyword">then</span></span><br><span class="line">            <span class="built_in">print</span> <span class="string">"(i10)"</span>, i</span><br><span class="line">            <span class="built_in">write</span> (id, <span class="string">"(i10)"</span>) idx</span><br><span class="line">            id = <span class="built_in">adjustl</span>(id)</span><br><span class="line">            open(<span class="keyword">file</span>=<span class="string">'./data/maps/map_'</span>//<span class="built_in">trim</span>(id)//<span class="string">'.dat'</span>, <span class="keyword">unit</span>=<span class="number">10</span>)</span><br><span class="line">            open(<span class="keyword">file</span>=<span class="string">'./data/distributions/distribution_'</span>//<span class="built_in">trim</span>(id)//<span class="string">'.dat'</span>, <span class="keyword">unit</span>=<span class="number">11</span>)</span><br><span class="line">            <span class="keyword">do</span> k = <span class="number">1</span>, <span class="number">256</span></span><br><span class="line">                <span class="keyword">do</span> j = <span class="number">1</span>, <span class="number">256</span></span><br><span class="line">                    <span class="built_in">write</span> (<span class="number">10</span>, <span class="string">"(3i10)"</span>) k, j, map(k, j)</span><br><span class="line">                <span class="keyword">end</span> <span class="keyword">do</span></span><br><span class="line">            <span class="keyword">end</span> <span class="keyword">do</span></span><br><span class="line">            <span class="keyword">do</span> k = <span class="number">0</span>, <span class="number">255</span></span><br><span class="line">                <span class="built_in">write</span> (<span class="number">11</span>, <span class="string">"(3i10)"</span>) k, distribution(k)</span><br><span class="line">            <span class="keyword">end</span> <span class="keyword">do</span></span><br><span class="line">            close(<span class="number">10</span>)</span><br><span class="line">            close(<span class="number">11</span>)</span><br><span class="line">            idx = idx + <span class="number">1</span></span><br><span class="line">        <span class="keyword">end</span> <span class="keyword">if</span></span><br><span class="line">    <span class="keyword">end</span> <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span> <span class="function"><span class="keyword">subroutine</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">subroutine</span></span> randint(n, <span class="built_in">min</span>, <span class="built_in">max</span>)</span><br><span class="line">    <span class="keyword">implicit</span> <span class="keyword">none</span></span><br><span class="line">    <span class="keyword">integer</span>, <span class="keyword">intent</span>(<span class="keyword">out</span>) :: n</span><br><span class="line">    <span class="keyword">integer</span>, <span class="keyword">intent</span>(<span class="keyword">in</span>) :: <span class="built_in">min</span>, <span class="built_in">max</span></span><br><span class="line">    <span class="keyword">real</span> :: r</span><br><span class="line"></span><br><span class="line">    <span class="keyword">call</span> <span class="built_in">random_seed</span>()</span><br><span class="line">    <span class="keyword">call</span> <span class="built_in">random_number</span>(r)</span><br><span class="line">    n = <span class="built_in">floor</span>(r*(<span class="built_in">max</span>-<span class="built_in">min</span>+<span class="number">1</span>))+<span class="built_in">min</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line"><span class="keyword">end</span> <span class="function"><span class="keyword">subroutine</span></span></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>您的支持就是对我最大的鼓励！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="神成樹理 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="神成樹理 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%AD%A6%E4%B9%A0/" rel="tag"># 学习</a>
+              <a href="/tags/%E7%A0%94%E7%A9%B6/" rel="tag"># 研究</a>
+              <a href="/tags/%E7%8E%BB%E5%B0%94%E5%85%B9%E6%9B%BC%E5%88%86%E5%B8%83/" rel="tag"># 玻尔兹曼分布</a>
+              <a href="/tags/Fortran/" rel="tag"># Fortran</a>
+              <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%A8%A1%E6%8B%9F/" rel="tag"># 计算机模拟</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/25/use-ipad-to-learn/" rel="prev" title="我是如何利用 iPad 来学习的？">
+      <i class="fa fa-chevron-left"></i> 我是如何利用 iPad 来学习的？
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#模拟一：无空间结构的粒子体系"><span class="nav-number">1.</span> <span class="nav-text">模拟一：无空间结构的粒子体系</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Problem-Setup"><span class="nav-number">1.1.</span> <span class="nav-text">Problem Setup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Result"><span class="nav-number">1.2.</span> <span class="nav-text">Result</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模拟二：有空间结构的粒子体系（无界空间）"><span class="nav-number">2.</span> <span class="nav-text">模拟二：有空间结构的粒子体系（无界空间）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Problem-Setup-1"><span class="nav-number">2.1.</span> <span class="nav-text">Problem Setup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Result-1"><span class="nav-number">2.2.</span> <span class="nav-text">Result</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#模拟三：有空间结构的粒子体系（有界空间）"><span class="nav-number">3.</span> <span class="nav-text">模拟三：有空间结构的粒子体系（有界空间）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Problem-Setup-2"><span class="nav-number">3.1.</span> <span class="nav-text">Problem Setup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Result-2"><span class="nav-number">3.2.</span> <span class="nav-text">Result</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分析以及数学证明"><span class="nav-number">4.</span> <span class="nav-text">分析以及数学证明</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Code"><span class="nav-number">5.</span> <span class="nav-text">Code</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="神成樹理"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">神成樹理</p>
+  <div class="site-description" itemprop="description">自由 克制 探索 释放</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/14018671" title="哔哩哔哩 → https:&#x2F;&#x2F;space.bilibili.com&#x2F;14018671" rel="noopener" target="_blank">哔哩哔哩</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/zipwin" title="知乎 → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;zipwin" rel="noopener" target="_blank">知乎</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">神成樹理</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">NaNm</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">NaN:aN</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.7.1
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
